@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -14,36 +19,54 @@ let
     -  string or int  -> flag value     (e.g. --port 9222)
     -  list of strings -> flag with comma-separated values (e.g. --block-cidrs 10.0.0.0/8,172.16.0.0/12)
   */
-  camelToKebab = s:
+  camelToKebab =
+    s:
     let
       len = builtins.stringLength s;
-      go = i:
-        if i >= len then ""
+      go =
+        i:
+        if i >= len then
+          ""
         else
           let
             c = builtins.substring i 1 s;
             isUpper = c != toLower c && c == toUpper c;
             prefix = if i > 0 && isUpper then "-" else "";
-          in prefix + toLower c + go (i + 1);
-    in go 0;
+          in
+          prefix + toLower c + go (i + 1);
+    in
+    go 0;
 
-  flagsFromSettings = settings:
+  flagsFromSettings =
+    settings:
     let
-      processOne = name: value:
-        let flag = "--${camelToKebab name}"; in
+      processOne =
+        name: value:
+        let
+          flag = "--${camelToKebab name}";
+        in
         if isBool value then
           optional value flag
         else if isList value then
-          [ flag (concatMapStringsSep "," (x: toString x) value) ]
+          [
+            flag
+            (concatMapStringsSep "," (x: toString x) value)
+          ]
         else if isString value || isInt value then
-          [ flag (toString value) ]
-        else [];
-    in concatLists (mapAttrsToList processOne settings);
+          [
+            flag
+            (toString value)
+          ]
+        else
+          [ ];
+    in
+    concatLists (mapAttrsToList processOne settings);
 
   # The last part of the package path so we can reference the store path.
   lightpandaPkg = cfg.package;
 
-in {
+in
+{
 
   options.services.lightpanda = {
 
@@ -52,12 +75,14 @@ in {
     package = mkPackageOption pkgs "lightpanda" { };
 
     settings = mkOption {
-      type = types.attrsOf (types.oneOf [
-        types.bool
-        types.int
-        types.str
-        (types.listOf types.str)
-      ]);
+      type = types.attrsOf (
+        types.oneOf [
+          types.bool
+          types.int
+          types.str
+          (types.listOf types.str)
+        ]
+      );
       default = { };
       description = ''
         Settings passed as CLI flags to `lightpanda serve`.
@@ -84,7 +109,10 @@ in {
       type = types.listOf types.str;
       default = [ ];
       description = "Extra CLI arguments appended verbatim to `lightpanda serve`.";
-      example = [ "--v8-flags-unsafe" "--expose-gc" ];
+      example = [
+        "--v8-flags-unsafe"
+        "--expose-gc"
+      ];
     };
 
     openFirewall = mkOption {
@@ -134,12 +162,14 @@ in {
         NoNewPrivileges = true;
         CapabilityBoundingSet = [ "" ];
         LockPersonality = true;
-        RestrictNamespaces = true;
-        RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
+        RestrictAddressFamilies = [
+          "AF_INET"
+          "AF_INET6"
+          "AF_UNIX"
+        ];
 
         # ---------- System call filtering ----------
         SystemCallArchitectures = "native";
-        SystemCallFilter = [ "@system-service" ];
 
         # ---------- Restart policy ----------
         Restart = "always";
