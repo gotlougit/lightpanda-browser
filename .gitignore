@@ -4,7 +4,9 @@
 /.lp-history.js
 /.lp-agent.zon
 /zig-pkg/
+/.cargo-home/
 zig-out
 lightpanda.id
 /src/html5ever/target/
 src/snapshot.bin
+v8/
