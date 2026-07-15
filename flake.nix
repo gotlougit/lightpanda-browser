@@ -148,10 +148,10 @@
                 mv "$CARGO_HOME" "$out"
               '';
 
-          # FHS build environment shared between the dev shell and the package
-          # build.  The zig-v8-fork pipeline and C toolchain expect standard
-          # FHS paths (/lib, /usr/lib, /usr/include) which Nix doesn't provide
-          # by default.
+          # FHS build environment used by the package derivation.
+          # The zig-v8-fork pipeline and C toolchain expect standard FHS paths
+          # (/lib, /usr/lib, /usr/include) which Nix doesn't provide by default
+          # inside a sandboxed derivation.
           fhs = pkgs.buildFHSEnvBubblewrap {
             name = "kornel";
             targetPkgs =
@@ -242,8 +242,86 @@
 
         in
         {
-          # Dev shell: enter the FHS environment interactively.
-          devShells.default = fhs.env or fhs;
+          # ── Dev shell ────────────────────────────────────────────────────
+          #
+          # Nix-native mkShell — no FHS bubblewrap wrapper.  zig cc handles
+          # C/C++ compilation with its built-in Clang; on standard Linux
+          # distros the system glibc headers/libraries are accessible through
+          # normal paths, and Zig bundles its own fallback libc headers for
+          # NixOS.
+          #
+          # Zig/cargo caches are kept under the project root so they don't
+          # pollute ~/.cache/zig or ~/.cargo.
+          #
+          # The prebuilt V8 archive is symlinked from the Nix store into the
+          # paths expected by both the Makefile (.lp-cache/prebuilt-v8/) and
+          # the CI install action (v8/).
+          #
+          # If you use NixOS and zig cc can't find the system C library, set:
+          #   CPATH       = "${pkgs.glibc.dev}/include";
+          #   LIBRARY_PATH = "${pkgs.glibc}/lib:${pkgs.stdenv.cc.cc.lib}/lib";
+          # on the mkShell (uncomment below).
+          # ─────────────────────────────────────────────────────────────────
+          devShells.default = pkgs.mkShell {
+            nativeBuildInputs = with pkgs; [
+              zig
+              zls
+              rustToolchain
+              python3
+              pkg-config
+              cmake
+              gperf
+            ];
+
+            buildInputs = with pkgs; [
+              # C/C++ runtime needed by zig cc for native compilation.
+              #   glibc.dev       → headers (fallback; Zig bundles its own)
+              #   stdenv.cc.cc    → libstdc++ + GCC runtime (crtbegin.o & co.)
+              glibc.dev
+              stdenv.cc.cc
+              stdenv.cc.cc.lib
+              gcc.cc.lib
+            ];
+
+            # Uncomment these on NixOS if zig cc can't find system libraries:
+            # CPATH       = "${pkgs.glibc.dev}/include";
+            # LIBRARY_PATH = "${pkgs.glibc}/lib:${pkgs.stdenv.cc.cc.lib}/lib";
+
+            shellHook = ''
+              # ── route zig/cargo caches to project-local dirs ────────────
+              export ZIG_GLOBAL_CACHE_DIR="$PWD/.zig-cache/global"
+              export CARGO_HOME="$PWD/.cargo-home"
+              mkdir -p "$ZIG_GLOBAL_CACHE_DIR" "$CARGO_HOME"
+
+              # ── symlink the prebuilt V8 archive ─────────────────────────
+              # Makefile path (make download-v8 checks this):
+              mkdir -p .lp-cache/prebuilt-v8
+              if [ ! -f ".lp-cache/prebuilt-v8/${v8ArchiveName}" ]; then
+                ln -sf ${prebuiltV8} ".lp-cache/prebuilt-v8/${v8ArchiveName}"
+              fi
+
+              # CI install-action path (zig-v8-fork expects v8/libc_v8.a):
+              mkdir -p v8
+              if [ ! -f v8/libc_v8.a ]; then
+                ln -sf ${prebuiltV8} v8/libc_v8.a
+              fi
+
+              echo "=== Lightpanda dev shell ==="
+              echo "  zig   : $(zig version)"
+              echo "  v8    : ${v8Version} (prebuilt)"
+              echo "  cache : $ZIG_GLOBAL_CACHE_DIR"
+              echo ""
+              echo "Quick start:"
+              echo "  zig build -Dprebuilt_v8_path=v8/libc_v8.a                   # debug build"
+              echo "  zig build -Dprebuilt_v8_path=v8/libc_v8.a test              # run tests"
+              echo "  zig build -Doptimize=ReleaseFast -Dprebuilt_v8_path=v8/libc_v8.a  # release"
+              echo "  make build-dev                                              # or use make"
+            '';
+          };
+
+          # Old FHS-based dev shell (still available for comparison / CI
+          # debugging):
+          devShells.fhs = fhs.env or fhs;
 
           # Standalone derivations that pre-fetch zig / cargo dependencies
           # (useful for debugging / updating the dep hashes).
