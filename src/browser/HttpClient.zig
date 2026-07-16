@@ -50,6 +50,7 @@ pub const RobotsLayer = @import("../network/layer/RobotsLayer.zig");
 pub const WebBotAuthLayer = @import("../network/layer/WebBotAuthLayer.zig");
 pub const InterceptionLayer = @import("../network/layer/InterceptionLayer.zig");
 pub const AdBlockLayer = @import("../network/layer/AdBlockLayer.zig");
+pub const PrivacyRedirectLayer = @import("../network/layer/PrivacyRedirectLayer.zig");
 pub const DeferringLayer = @import("../network/layer/DeferringLayer.zig");
 
 // This is loosely tied to a browser Frame. Loading all the <scripts>, doing
@@ -174,6 +175,7 @@ robots_layer: RobotsLayer,
 web_bot_auth_layer: WebBotAuthLayer,
 interception_layer: InterceptionLayer,
 adblock_layer: AdBlockLayer,
+privacy_redirect_layer: PrivacyRedirectLayer,
 deferring_layer: DeferringLayer,
 entry_layer: Layer,
 
@@ -229,6 +231,7 @@ pub fn init(self: *Client, allocator: Allocator, network: *Network, cdp: ?*CDP) 
         .web_bot_auth_layer = .{},
         .interception_layer = .{},
         .adblock_layer = .{},
+        .privacy_redirect_layer = .{},
         .deferring_layer = .{ .allocator = allocator, .network = network },
         .entry_layer = undefined,
         .arena_pool = &network.app.arena_pool,
@@ -249,6 +252,7 @@ pub fn init(self: *Client, allocator: Allocator, network: *Network, cdp: ?*CDP) 
     }
 
     next = layerWith(&self.adblock_layer, next);
+    next = layerWith(&self.privacy_redirect_layer, next);
 
     if (network.config.webBotAuth() != null) {
         next = layerWith(&self.web_bot_auth_layer, next);
