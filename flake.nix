@@ -268,6 +268,7 @@
               zls
               rustToolchain
               python3
+              python3Packages.playwright
               pkg-config
               cmake
               gperf
