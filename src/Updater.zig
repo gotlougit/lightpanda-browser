@@ -55,47 +55,6 @@ pub fn deinit(self: *Updater) void {
 /// Outputs directly to given `Writer`.
 pub fn inform(self: *Updater, writer: *std.Io.Writer) !void {
     const conn = try http.Connection.init(self.x509_store, self.config, null);
-    defer conn.deinit();
-
-    const url = std.fmt.comptimePrint("https://telemetry.lightpanda.io/v/{s}", .{lp.build_config.version});
-    // Prepare the request.
-    try conn.setURL(url);
-    try conn.setGetMode();
-    try conn.setFollowLocation(true);
-
-    // Wraps everything needed to receive bytes.
-    const ReceiverContext = struct {
-        writer: *std.Io.Writer,
-        err: std.Io.Writer.Error!void = {},
-
-        /// curl -> writer.
-        fn drain(
-            buffer: [*]const u8,
-            buf_count: usize,
-            buf_len: usize,
-            raw_ctx: *anyopaque,
-        ) callconv(.c) usize {
-            const ctx: *@This() = @ptrCast(@alignCast(raw_ctx));
-            const chunk = buffer[0 .. buf_count * buf_len];
-            ctx.writer.writeAll(chunk) catch |err| {
-                ctx.err = err;
-                return 0;
-            };
-
-            return chunk.len;
-        }
-    };
-
-    // Set receiver context.
-    var ctx = ReceiverContext{ .writer = writer };
-    try libcurl.curl_easy_setopt(conn._easy, .write_data, &ctx);
-    try libcurl.curl_easy_setopt(conn._easy, .write_function, ReceiverContext.drain);
-
-    // Make a request.
-    const status_int = conn.perform() catch |err| {
-        ctx.err catch |ctx_err| return ctx_err;
-        return err;
-    };
-    _ = status_int;
+    conn.deinit();
     return writer.flush();
 }

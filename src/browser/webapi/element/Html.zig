@@ -486,7 +486,7 @@ pub fn setTitle(self: *HtmlElement, value: []const u8, frame: *Frame) !void {
 // end-to-end — downstream CDP tools (notably Puppeteer's dispatchKeyEvent
 // path) would route into an input pipeline that silently no-ops. Always
 // return false, and log .not_implemented when the spec would have said true
-// so usage surfaces in telemetry rather than silently depending on an
+// so usage surfaces in logs rather than silently depending on an
 // unsupported value. Spec walk per HTML §7.7.5.2 still applies — the nearest
 // ancestor with `contenteditable` wins; "false" disables. See PR #2310 for
 // the routing-vs-fail-loud discussion.

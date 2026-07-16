@@ -22,7 +22,6 @@ const lp = @import("lightpanda");
 const Config = @import("Config.zig");
 const Snapshot = @import("browser/js/Snapshot.zig");
 const Platform = @import("browser/js/Platform.zig");
-const Telemetry = @import("telemetry/telemetry.zig").Telemetry;
 
 const Storage = @import("storage/Storage.zig");
 const Network = @import("network/Network.zig");
@@ -39,7 +38,6 @@ config: *const Config,
 storage: Storage,
 platform: Platform,
 snapshot: Snapshot,
-telemetry: Telemetry,
 watchdog: Watchdog,
 allocator: Allocator,
 arena_pool: ArenaPool,
@@ -66,7 +64,6 @@ pub fn init(allocator: Allocator, config: *const Config) !*App {
         .storage = storage,
         .network = undefined,
         .app_dir_path = undefined,
-        .telemetry = undefined,
         .arena_pool = undefined,
         .watchdog = .init(config.watchdogMs()),
     };
@@ -77,9 +74,6 @@ pub fn init(allocator: Allocator, config: *const Config) !*App {
     errdefer app.network.deinit();
 
     app.app_dir_path = getAndMakeAppDir(allocator);
-
-    app.telemetry = try Telemetry.init(app, config.command, config.interactive());
-    errdefer app.telemetry.deinit(allocator);
 
     app.arena_pool = ArenaPool.init(allocator, .{});
     errdefer app.arena_pool.deinit();
@@ -100,7 +94,6 @@ pub fn deinit(self: *App) void {
         allocator.free(app_dir_path);
         self.app_dir_path = null;
     }
-    self.telemetry.deinit(allocator);
     self.network.deinit();
     self.snapshot.deinit();
     self.platform.deinit();

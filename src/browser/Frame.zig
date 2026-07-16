@@ -713,8 +713,6 @@ pub fn navigate(self: *Frame, request_url: [:0]const u8, opts: NavigateOpts) !vo
             .timestamp = timestamp(.monotonic),
         });
 
-        self.recordNavigateTelemetry(false);
-
         session.notification.dispatch(.frame_navigated, &.{
             .req_id = req_id,
             .frame_id = self._frame_id,
@@ -809,30 +807,12 @@ pub fn navigate(self: *Frame, request_url: [:0]const u8, opts: NavigateOpts) !vo
         .is_pending_root = is_pending_root,
     });
 
-    // Record telemetry for navigation
-    self.recordNavigateTelemetry(std.ascii.startsWithIgnoreCase(self.url, "https://"));
-
     session.navigation._current_navigation_kind = opts.kind;
 
     transfer.submit() catch |err| {
         log.err(.frame, "navigate request", .{ .url = self.url, .err = err, .type = self._type });
         return err;
     };
-}
-
-fn recordNavigateTelemetry(self: *Frame, tls: bool) void {
-    const TE = @import("../telemetry/telemetry.zig").Event;
-    const context: TE.Navigate.Context = if (self.parent != null)
-        .iframe
-    else if (self.window._opener != null)
-        .popup
-    else
-        .page;
-    lp.metrics.navigate.incr(context);
-    self._session.browser.app.telemetry.record(.{ .navigate = .{
-        .tls = tls,
-        .context = context,
-    } });
 }
 
 // Navigation can happen in many places, such as executing a <script> tag or

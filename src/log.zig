@@ -38,7 +38,6 @@ pub const Scope = enum {
     event,
     scheduler,
     not_implemented,
-    telemetry,
     unknown_prop,
     mcp,
     cache,

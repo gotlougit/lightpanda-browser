@@ -108,13 +108,6 @@ fn run(allocator: Allocator, main_arena: Allocator) !void {
 
     try sighandler.on(lp.Network.stop, .{&app.network});
 
-    app.telemetry.record(.{ .run = {} });
-
-    defer if (app.config.dumpMetricsOnExit()) {
-        var stdout = std.fs.File.stdout();
-        var writer = stdout.writer(&.{});
-        lp.metrics.write(&writer.interface);
-    };
 
     switch (args.mode) {
         .serve => |opts| {
@@ -309,16 +302,6 @@ fn agentThread(
     sig_bridge.attach(agent_instance);
     defer agent_instance.deinit();
     defer sig_bridge.detach();
-
-    if (agent_instance.ai_client) |cli| {
-        app.telemetry.record(.{
-            .llm = app.telemetry.llm_init(@tagName(cli), agent_instance.model),
-        });
-    } else {
-        app.telemetry.record(.{
-            .llm = app.telemetry.llm_init("nollm", null),
-        });
-    }
 
     if (!agent_instance.run()) {
         failed.* = true;

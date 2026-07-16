@@ -23,8 +23,8 @@
 //! instances run under a shared `core_pattern` crash reporter — e.g. a
 //! containerized crawl fleet — those dumps become pure storage and alert
 //! noise, and a browser core can capture the contents of arbitrary pages.
-//! Crashes are already reported via telemetry, so `LIGHTPANDA_DISABLE_CORE_DUMP`
-//! lets an operator drop the cores while leaving the default behavior
+//! `LIGHTPANDA_DISABLE_CORE_DUMP` lets an operator drop the cores
+//! while leaving the default behavior
 //! (and local debugging) untouched.
 
 const std = @import("std");

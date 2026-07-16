@@ -228,7 +228,7 @@ A skill is available in [lightpanda-io/agent-skill](https://github.com/lightpand
 
 ### Telemetry
 
-By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
+Telemetry collection has been removed. Lightpanda no longer collects or sends usage telemetry. The environment variable `LIGHTPANDA_DISABLE_TELEMETRY` is no longer recognized.
 
 ### Core dumps
 

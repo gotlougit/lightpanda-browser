@@ -571,8 +571,7 @@ pub fn run(self: *Network) void {
     // Receiving a shutdown command does not terminate existing connections: we
     // stop accepting new ones but leave in-flight requests to external code to
     // terminate. This loop only services the listener and the CDP read sockets;
-    // page fetches run on per-worker HttpClient multis and telemetry on its own
-    // thread, so nothing here drives libcurl.
+    // page fetches run on per-worker HttpClient multis, so nothing here drives libcurl.
     while (true) {
         if (self.listener != null and !self.accept.load(.acquire)) {
             posix.close(self.listener.?.socket);
@@ -605,7 +604,7 @@ pub fn run(self: *Network) void {
 
         if (self.shutdown.load(.acquire)) {
             // Drain any live CDP links so their workers can exit (issue #2510),
-            // then stop. Page fetches and telemetry don't run on this loop, so
+            // then stop. Page fetches don't run on this loop, so
             // there is nothing else to flush here.
             self.shutdownCdpLinks();
             break;

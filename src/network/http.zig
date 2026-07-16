@@ -354,9 +354,8 @@ pub const Connection = struct {
     node: std.DoublyLinkedList.Node = .{},
 
     pub const Transport = union(enum) {
-        none, // used for cases that manage their own connection, e.g. telemetry
-        http: *@import("HttpClient.zig").Transfer,
-        websocket: *@import("../browser/webapi/net/WebSocket.zig"),
+        none, // used for callers that manage their own connection lifecycle
+        http: *@import("../browser/HttpClient.zig").Transfer,        websocket: *@import("../browser/webapi/net/WebSocket.zig"),
     };
 
     pub fn init(
@@ -682,7 +681,7 @@ pub const Connection = struct {
 
     // Synchronous transfer that adds no request headers. request() injects the
     // browser User-Agent / sec-ch-ua machinery meant for page fetches; callers
-    // that manage their own connection (telemetry) use this leaner path.
+    // that manage their own connection use this leaner path.
     pub fn perform(self: *const Connection) !u16 {
         try libcurl.curl_easy_perform(self._easy);
         return self.getResponseCode();
