@@ -86,6 +86,7 @@ fn logLevelValidator(_: Allocator, args: *std.process.ArgIterator) !?log.Level {
 
 /// Common CLI args.
 const CommonOptions = .{
+    .{ .name = "redirect_rules", .type = ?[:0]const u8 },
     .{ .name = "obey_robots", .type = bool },
     .{ .name = "proxy_bearer_token", .type = ?[:0]const u8 },
     .{ .name = "http_proxy", .type = ?[:0]const u8 },
@@ -546,6 +547,13 @@ pub fn advertiseHost(self: *const Config) []const u8 {
     return switch (self.mode) {
         .serve => |opts| opts.advertise_host orelse opts.host,
         .mcp => "127.0.0.1",
+        else => unreachable,
+    };
+}
+
+pub fn redirectRules(self: *const Config) ?[:0]const u8 {
+    return switch (self.mode) {
+        inline .serve, .fetch, .mcp, .agent => |opts| opts.redirect_rules,
         else => unreachable,
     };
 }

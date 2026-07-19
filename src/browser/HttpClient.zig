@@ -231,7 +231,7 @@ pub fn init(self: *Client, allocator: Allocator, network: *Network, cdp: ?*CDP) 
         .web_bot_auth_layer = .{},
         .interception_layer = .{},
         .adblock_layer = .{},
-        .privacy_redirect_layer = .{},
+        .privacy_redirect_layer = .{ .config = network.config },
         .deferring_layer = .{ .allocator = allocator, .network = network },
         .entry_layer = undefined,
         .arena_pool = &network.app.arena_pool,
