@@ -108,7 +108,6 @@ fn run(allocator: Allocator, main_arena: Allocator) !void {
 
     try sighandler.on(lp.Network.stop, .{&app.network});
 
-
     switch (args.mode) {
         .serve => |opts| {
             log.debug(.app, "startup", .{ .mode = "serve", .snapshot = app.snapshot.fromEmbedded() });

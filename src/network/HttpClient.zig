@@ -507,6 +507,26 @@ pub fn newRequest(self: *Client, req: Request, owner: ?*Owner) anyerror!*Transfe
         // These are all small, so duping them into the transfer's arena is
         // cheap and can solve some nasty UAF.
         owned.url = try arena.dupeZ(u8, req.url);
+
+        // ── Adblocker: block requests to known ad/malware domains ──
+        {
+            const hostname = URL.getHostname(owned.url);
+            if (std.mem.eql(u8, hostname, "google.com")) {
+                log.info(.http, "WIP adblocking done", .{ .url = owned.url });
+                owned.error_callback(owned.ctx, error.AdBlocked);
+                return error.AdBlocked;
+            }
+        }
+
+        // ── Privacy redirect: rewrite URLs to privacy-respecting front-ends ──
+        {
+            const hostname = URL.getHostname(owned.url);
+            if (std.mem.eql(u8, hostname, "x.com") or std.mem.eql(u8, hostname, "twitter.com")) {
+                owned.url = try URL.setHostname(owned.url, "xcancel.com", arena);
+                log.info(.http, "privacy redirect", .{ .url = owned.url });
+            }
+        }
+
         owned.cookie_origin = try arena.dupeZ(u8, req.cookie_origin);
         if (req.credentials) |c| {
             owned.credentials = try arena.dupeZ(u8, c);

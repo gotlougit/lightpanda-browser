@@ -30,7 +30,7 @@ js_heap_limits: Counter = .{},
 script_errors: Counter = .{},
 arena_hit: CounterEnum("size", @import("ArenaPool.zig").BucketSize) = .{},
 arena_miss: CounterEnum("size", @import("ArenaPool.zig").BucketSize) = .{},
-navigate: CounterEnum("type", @import("telemetry/telemetry.zig").Event.Navigate.Context) = .{},
+navigate: CounterEnum("type", enum { page, iframe, popup }) = .{},
 js_heap_size_bytes: Histogram(&.{
     4 * 1024 * 1024,
     8 * 1024 * 1024,

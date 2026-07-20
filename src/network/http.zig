@@ -355,7 +355,8 @@ pub const Connection = struct {
 
     pub const Transport = union(enum) {
         none, // used for callers that manage their own connection lifecycle
-        http: *@import("../browser/HttpClient.zig").Transfer,        websocket: *@import("../browser/webapi/net/WebSocket.zig"),
+        http: *@import("HttpClient.zig").Transfer,
+        websocket: *@import("../browser/webapi/net/WebSocket.zig"),
     };
 
     pub fn init(
