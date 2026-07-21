@@ -12,10 +12,10 @@ linkFarm "zig-packages" [
     };
   }
   {
-    name = "1220e70ebe4d3945832bb1d6a454c947c25767951873034610c3aec0ef60d4e7ec4f";
+    name = "zenai-0.0.0-iOY_VAOpBQBL1tO2StxVzubQcM1DliSYIQEkqS5s_kWj";
     path = fetchzip {
-      url = "https://github.com/lightpanda-io/zenai/archive/1df180de89ef72535d973af7854bf24dc8ab94a7.tar.gz";
-      hash = "sha256-lLnMJtMdLoKPQQrYy3xkQZcP5EPkby80+7AOc4GHIY8=";
+      url = "https://github.com/gotlougit/zenai/archive/8e82177ac06b3228c94d6ca27d90aca8a839c4d0.tar.gz";
+      hash = "sha256-xQ5QSaV1omdoV+xQNfwC4p2o1VyHOZaHpNIBJearg3Q=";
     };
   }
   {
