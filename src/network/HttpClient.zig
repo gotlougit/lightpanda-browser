@@ -518,12 +518,24 @@ pub fn newRequest(self: *Client, req: Request, owner: ?*Owner) anyerror!*Transfe
             }
         }
 
-        // ── Privacy redirect: rewrite URLs to privacy-respecting front-ends ──
+        // ── Privacy redirect: rewrite URLs based on --redirect_rules ──
         {
             const hostname = URL.getHostname(owned.url);
-            if (std.mem.eql(u8, hostname, "x.com") or std.mem.eql(u8, hostname, "twitter.com")) {
-                owned.url = try URL.setHostname(owned.url, "xcancel.com", arena);
-                log.info(.http, "privacy redirect", .{ .url = owned.url });
+            if (self.network.config.redirectRules()) |rules| {
+                var it = std.mem.splitScalar(u8, rules, ';');
+                while (it.next()) |rule| {
+                    const trimmed = std.mem.trim(u8, rule, &std.ascii.whitespace);
+                    if (trimmed.len == 0) continue;
+                    var eq_it = std.mem.splitScalar(u8, trimmed, '=');
+                    const old_domain = std.mem.trim(u8, eq_it.next() orelse continue, &std.ascii.whitespace);
+                    const new_domain = std.mem.trim(u8, eq_it.next() orelse continue, &std.ascii.whitespace);
+                    if (old_domain.len == 0 or new_domain.len == 0) continue;
+                    if (std.mem.eql(u8, hostname, old_domain)) {
+                        owned.url = try URL.setHostname(owned.url, new_domain, arena);
+                        log.info(.http, "privacy redirect", .{ .url = owned.url });
+                        break;
+                    }
+                }
             }
         }
 
